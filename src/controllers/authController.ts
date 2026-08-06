@@ -49,7 +49,7 @@ export const register = async (req: Request, res: Response) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
-    let userGender = Gender.UNSPECIFIED;
+    let userGender: Gender = Gender.UNSPECIFIED;
     if (gender && (gender === 'MALE' || gender === 'FEMALE')) {
       userGender = gender as Gender;
     }
