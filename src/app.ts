@@ -47,12 +47,4 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   sendError(res, message, status, data);
 });
 
-const PORT = process.env.PORT || 3000;
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-  });
-}
-
 export default app;
