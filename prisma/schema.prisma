@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- AUTH & USER ---
+enum Gender {
+  MALE
+  FEMALE
+  UNSPECIFIED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  fullName      String?
+  email         String    @unique
+  passwordHash  String?
+  gender        Gender    @default(UNSPECIFIED)
+  authProvider  Provider  @default(LOCAL)
+  routines      Routine[]
+  workouts      WorkoutSession[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+  APPLE
+}
+
+// --- EXERCISE DATABASE ---
+model Exercise {
+  id               String    @id @default(uuid())
+  name             String
+  bodyPart         String
+  category         String
+  videos           Json?
+  thumbnails       Json?
+  instructions     Json?
+  routineExercises RoutineExercise[]
+  workoutExercises WorkoutExercise[]
+}
+
+// --- ROUTINES ---
+model Routine {
+  id          String   @id @default(uuid())
+  name        String
+  notes       String?
+  automaticRestTimer Boolean @default(true)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  exercises   RoutineExercise[]
+  workouts    WorkoutSession[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RoutineExercise {
+  id          String   @id @default(uuid())
+  routineId   String
+  routine     Routine  @relation(fields: [routineId], references: [id])
+  exerciseId  String
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  order       Int
+  targetSets  Int      @default(1)
+  targetReps  String?
+  restSeconds Int?
+}
+
+// --- WORKOUT SESSIONS & LIVE TRACKING ---
+model WorkoutSession {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  routineId   String?
+  routine     Routine? @relation(fields: [routineId], references: [id])
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  durationSec Int?
+  volumeKg    Float    @default(0)
+  notes       String?
+  exercises   WorkoutExercise[]
+  createdAt   DateTime @default(now())
+}
+
+model WorkoutExercise {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     WorkoutSession @relation(fields: [sessionId], references: [id])
+  exerciseId  String
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  order       Int
+  notes       String?
+  sets        WorkoutSet[]
+}
+
+model WorkoutSet {
+  id                String   @id @default(uuid())
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
+  setNumber         Int
+  weightKg          Float?
+  reps              Int?
+  isCompleted       Boolean  @default(false)
+}

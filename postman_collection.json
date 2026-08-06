@@ -1,0 +1,502 @@
+{
+  "info": {
+    "name": "Fitness App API",
+    "description": "Complete API collection for the Fitness Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "YOUR_REFRESH_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "}",
+                  "if (response.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "    console.log('Tokens automatically saved to collection variables!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Alex Smith\",\n  \"email\": \"alex@example.com\",\n  \"password\": \"securepassword123\",\n  \"gender\": \"MALE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "register" ]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "}",
+                  "if (response.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "    console.log('Tokens automatically saved to collection variables!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex@example.com\",\n  \"password\": \"securepassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "login" ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "}",
+                  "if (response.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "    console.log('Tokens refreshed successfully!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "refresh" ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "logout" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Exercises",
+      "item": [
+        {
+          "name": "Get All Exercises",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exercises?search=&muscleGroup=&limit=50&offset=0",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "exercises" ],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "muscleGroup", "value": "" },
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Exercise Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exercises/ex-123",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "exercises", "ex-123" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Routines",
+      "item": [
+        {
+          "name": "Get All Routines",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/routines",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "routines" ]
+            }
+          }
+        },
+        {
+          "name": "Create Routine",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Upper Body\",\n  \"automaticRestTimer\": true,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetSets\": 3, \"targetReps\": \"8-10\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/routines",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "routines" ]
+            }
+          }
+        },
+        {
+          "name": "Update Routine",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Upper Body V2\",\n  \"automaticRestTimer\": false,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetSets\": 4, \"targetReps\": \"10-12\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/routines/routine-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "routines", "routine-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Routine",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/routines/routine-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "routines", "routine-id-here" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Workouts",
+      "item": [
+        {
+          "name": "Get All Workouts (History)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workouts",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts" ]
+            }
+          }
+        },
+        {
+          "name": "Get Workout Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Start Workout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"routineId\": \"routine-id-here\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workouts",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts" ]
+            }
+          }
+        },
+        {
+          "name": "Log Set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weightKg\": 65,\n  \"reps\": 8,\n  \"isCompleted\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/sets/set-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "sets", "set-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Set",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/sets/set-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "sets", "set-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Add Exercise Mid-Workout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"exerciseId\": \"0489\",\n  \"order\": 4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/workout-exercises",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "workout-exercises" ]
+            }
+          }
+        },
+        {
+          "name": "Add Set to Exercise",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/workout-exercises/workout-exercise-id-here/sets",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "workout-exercises", "workout-exercise-id-here", "sets" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Exercise from Workout",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/workout-exercises/workout-exercise-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "workout-exercises", "workout-exercise-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Save Exercise Notes",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Focus on deep stretch at the bottom.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/workout-exercises/workout-exercise-id-here",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "workout-exercises", "workout-exercise-id-here" ]
+            }
+          }
+        },
+        {
+          "name": "Finish Workout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endTime\": \"2024-05-14T11:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workouts/session-id-here/finish",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "workouts", "session-id-here", "finish" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Progress & Stats",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/progress/stats",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "progress", "stats" ]
+            }
+          }
+        },
+        {
+          "name": "Exercise 1RM History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/progress/1rm/0489",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "progress", "1rm", "0489" ]
+            }
+          }
+        },
+        {
+          "name": "Specific Exercise Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/progress/exercise-stats/0489",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "progress", "exercise-stats", "0489" ]
+            }
+          }
+        },
+        {
+          "name": "Personal Records List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/progress/records",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "progress", "records" ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
