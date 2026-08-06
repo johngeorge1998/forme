@@ -7,7 +7,12 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:4000/api/v1",
+      "value": "https://forme-lovat.vercel.app/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "localUrl",
+      "value": "https://decorator-worrier-mustard.ngrok-free.dev/api/v1",
       "type": "string"
     },
     {
