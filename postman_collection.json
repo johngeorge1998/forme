@@ -38,11 +38,11 @@
               "script": {
                 "exec": [
                   "const response = pm.response.json();",
-                  "if (response.token) {",
-                  "    pm.collectionVariables.set('token', response.token);",
+                  "if (response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('token', response.data.token);",
                   "}",
-                  "if (response.refreshToken) {",
-                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "if (response.data && response.data.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
                   "    console.log('Tokens automatically saved to collection variables!');",
                   "}"
                 ],
@@ -82,11 +82,11 @@
               "script": {
                 "exec": [
                   "const response = pm.response.json();",
-                  "if (response.token) {",
-                  "    pm.collectionVariables.set('token', response.token);",
+                  "if (response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('token', response.data.token);",
                   "}",
-                  "if (response.refreshToken) {",
-                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "if (response.data && response.data.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
                   "    console.log('Tokens automatically saved to collection variables!');",
                   "}"
                 ],
@@ -126,11 +126,11 @@
               "script": {
                 "exec": [
                   "const response = pm.response.json();",
-                  "if (response.token) {",
-                  "    pm.collectionVariables.set('token', response.token);",
+                  "if (response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('token', response.data.token);",
                   "}",
-                  "if (response.refreshToken) {",
-                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "if (response.data && response.data.refreshToken) {",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
                   "    console.log('Tokens refreshed successfully!');",
                   "}"
                 ],
