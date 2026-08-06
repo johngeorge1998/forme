@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../db';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const getAllWorkouts = async (req: AuthRequest, res: Response) => {
   try {
@@ -16,9 +17,9 @@ export const getAllWorkouts = async (req: AuthRequest, res: Response) => {
         }
       }
     });
-    res.json(workouts);
+    sendSuccess(res, workouts, 'Workouts fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch workouts' });
+    sendError(res, 'Failed to fetch workouts', 500);
   }
 };
 
@@ -39,12 +40,12 @@ export const getWorkoutById = async (req: AuthRequest, res: Response) => {
     });
 
     if (!workout) {
-      return res.status(404).json({ error: 'Workout not found' });
+      return sendError(res, 'Workout not found', 404);
     }
 
-    res.json(workout);
+    sendSuccess(res, workout, 'Workout fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch workout details' });
+    sendError(res, 'Failed to fetch workout details', 500);
   }
 };
 
@@ -59,7 +60,7 @@ export const startWorkout = async (req: AuthRequest, res: Response) => {
         where: { id: routineId, userId: req.user!.id },
         include: { exercises: true } 
       });
-      if (!routine) return res.status(404).json({ error: 'Routine not found.' });
+      if (!routine) return sendError(res, 'Routine not found.', 404);
 
       // Auto-populate based on routine template
       exercisesToCreate = routine.exercises.map((rx) => {
@@ -99,9 +100,9 @@ export const startWorkout = async (req: AuthRequest, res: Response) => {
       },
       include: { exercises: { include: { sets: true } } }
     });
-    res.status(201).json(session);
+    sendSuccess(res, session, 'Workout started successfully', 201);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to start workout' });
+    sendError(res, 'Failed to start workout', 500);
   }
 };
 
@@ -109,22 +110,22 @@ export const updateSet = async (req: AuthRequest, res: Response) => {
   try {
     const { weightKg, reps, isCompleted } = req.body;
     
-    if (weightKg !== undefined && weightKg < 0) return res.status(400).json({ error: 'Weight must be positive.' });
-    if (reps !== undefined && reps < 0) return res.status(400).json({ error: 'Reps must be positive.' });
+    if (weightKg !== undefined && weightKg < 0) return sendError(res, 'Weight must be positive.', 400);
+    if (reps !== undefined && reps < 0) return sendError(res, 'Reps must be positive.', 400);
 
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const updatedSet = await prisma.workoutSet.update({
       where: { id: req.params.setId },
       data: { weightKg, reps, isCompleted }
     });
 
-    res.json(updatedSet);
+    sendSuccess(res, updatedSet, 'Set updated successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update set' });
+    sendError(res, 'Failed to update set', 500);
   }
 };
 
@@ -135,10 +136,10 @@ export const addExerciseToWorkout = async (req: AuthRequest, res: Response) => {
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
-    if (!exercise) return res.status(404).json({ error: 'Exercise not found.' });
+    if (!exercise) return sendError(res, 'Exercise not found.', 404);
 
     const workoutExercise = await prisma.workoutExercise.create({
       data: {
@@ -152,9 +153,9 @@ export const addExerciseToWorkout = async (req: AuthRequest, res: Response) => {
       include: { sets: true }
     });
 
-    res.status(201).json(workoutExercise);
+    sendSuccess(res, workoutExercise, 'Exercise added to workout', 201);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add exercise to workout' });
+    sendError(res, 'Failed to add exercise to workout', 500);
   }
 };
 
@@ -163,13 +164,13 @@ export const addSetToExercise = async (req: AuthRequest, res: Response) => {
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const workoutExercise = await prisma.workoutExercise.findFirst({
       where: { id: req.params.workoutExerciseId, sessionId: req.params.id },
       include: { sets: true }
     });
-    if (!workoutExercise) return res.status(404).json({ error: 'Workout exercise not found.' });
+    if (!workoutExercise) return sendError(res, 'Workout exercise not found.', 404);
 
     const nextSetNumber = workoutExercise.sets.length + 1;
 
@@ -180,9 +181,9 @@ export const addSetToExercise = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.status(201).json(newSet);
+    sendSuccess(res, newSet, 'Set added successfully', 201);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add set' });
+    sendError(res, 'Failed to add set', 500);
   }
 };
 
@@ -191,12 +192,12 @@ export const removeExerciseFromWorkout = async (req: AuthRequest, res: Response)
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const workoutExercise = await prisma.workoutExercise.findFirst({
       where: { id: req.params.workoutExerciseId, sessionId: req.params.id }
     });
-    if (!workoutExercise) return res.status(404).json({ error: 'Workout exercise not found.' });
+    if (!workoutExercise) return sendError(res, 'Workout exercise not found.', 404);
 
     // Manually delete child sets to prevent foreign key errors (cascade)
     await prisma.workoutSet.deleteMany({
@@ -207,9 +208,9 @@ export const removeExerciseFromWorkout = async (req: AuthRequest, res: Response)
       where: { id: workoutExercise.id }
     });
 
-    res.json({ message: 'Exercise deleted successfully' });
+    sendSuccess(res, null, 'Exercise deleted successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete exercise' });
+    sendError(res, 'Failed to delete exercise', 500);
   }
 };
 
@@ -218,20 +219,20 @@ export const removeSetFromExercise = async (req: AuthRequest, res: Response) => 
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const workoutSet = await prisma.workoutSet.findFirst({
       where: { id: req.params.setId, workoutExercise: { sessionId: req.params.id } }
     });
-    if (!workoutSet) return res.status(404).json({ error: 'Workout set not found.' });
+    if (!workoutSet) return sendError(res, 'Workout set not found.', 404);
 
     await prisma.workoutSet.delete({
       where: { id: req.params.setId }
     });
 
-    res.json({ message: 'Set deleted successfully' });
+    sendSuccess(res, null, 'Set deleted successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete set' });
+    sendError(res, 'Failed to delete set', 500);
   }
 };
 
@@ -242,21 +243,21 @@ export const saveExerciseNotes = async (req: AuthRequest, res: Response) => {
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id }
     });
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
 
     const workoutExercise = await prisma.workoutExercise.findFirst({
       where: { id: req.params.workoutExerciseId, sessionId: req.params.id }
     });
-    if (!workoutExercise) return res.status(404).json({ error: 'Workout exercise not found.' });
+    if (!workoutExercise) return sendError(res, 'Workout exercise not found.', 404);
 
     const updated = await prisma.workoutExercise.update({
       where: { id: req.params.workoutExerciseId },
       data: { notes }
     });
 
-    res.json(updated);
+    sendSuccess(res, updated, 'Notes saved successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save notes' });
+    sendError(res, 'Failed to save notes', 500);
   }
 };
 
@@ -269,8 +270,8 @@ export const finishWorkout = async (req: AuthRequest, res: Response) => {
       include: { exercises: { include: { sets: true } } }
     });
 
-    if (!session) return res.status(404).json({ error: 'Workout session not found.' });
-    if (session.endTime) return res.status(400).json({ error: 'Workout is already finished.' });
+    if (!session) return sendError(res, 'Workout session not found.', 404);
+    if (session.endTime) return sendError(res, 'Workout is already finished.', 400);
 
     const end = endTime ? new Date(endTime) : new Date();
     const durationSec = Math.floor((end.getTime() - session.startTime.getTime()) / 1000);
@@ -293,8 +294,8 @@ export const finishWorkout = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json(updatedSession);
+    sendSuccess(res, updatedSession, 'Workout finished successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to finish workout' });
+    sendError(res, 'Failed to finish workout', 500);
   }
 };

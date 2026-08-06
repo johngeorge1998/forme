@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../db';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const getStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -47,16 +48,16 @@ export const getStats = async (req: AuthRequest, res: Response) => {
       volumeKg: s.volumeKg
     }));
 
-    res.json({
+    sendSuccess(res, {
       firstName,
       weeklyVolume,
       focusTimeHours: (focusTimeSec / 3600).toFixed(1),
       streak,
       chartData,
       recentActivity
-    });
+    }, 'Stats fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch stats' });
+    sendError(res, 'Failed to fetch stats', 500);
   }
 };
 
@@ -65,7 +66,7 @@ export const get1RMHistory = async (req: AuthRequest, res: Response) => {
     const { exerciseId } = req.params;
     
     const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
-    if (!exercise) return res.status(404).json({ error: 'Exercise not found.' });
+    if (!exercise) return sendError(res, 'Exercise not found.', 404);
 
     const sets = await prisma.workoutSet.findMany({
       where: {
@@ -96,9 +97,9 @@ export const get1RMHistory = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json(history);
+    sendSuccess(res, history, '1RM history fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch 1RM history' });
+    sendError(res, 'Failed to fetch 1RM history', 500);
   }
 };
 
@@ -107,7 +108,7 @@ export const getExerciseStats = async (req: AuthRequest, res: Response) => {
     const { exerciseId } = req.params;
 
     const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
-    if (!exercise) return res.status(404).json({ error: 'Exercise not found.' });
+    if (!exercise) return sendError(res, 'Exercise not found.', 404);
 
     const sets = await prisma.workoutSet.findMany({
       where: {
@@ -143,14 +144,14 @@ export const getExerciseStats = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json({
+    sendSuccess(res, {
       currentMaxKg,
       est1RMKg: parseFloat(est1RMKg.toFixed(1)),
       totalReps,
       prDate
-    });
+    }, 'Exercise stats fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch exercise stats' });
+    sendError(res, 'Failed to fetch exercise stats', 500);
   }
 };
 
@@ -196,8 +197,8 @@ export const getRecords = async (req: AuthRequest, res: Response) => {
       .sort((a, b) => b.weightKg - a.weightKg)
       .slice(0, 3);
 
-    res.json(records);
+    sendSuccess(res, records, 'Records fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch records' });
+    sendError(res, 'Failed to fetch records', 500);
   }
 };

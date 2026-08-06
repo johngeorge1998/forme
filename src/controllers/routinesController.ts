@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../db';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const getRoutines = async (req: AuthRequest, res: Response) => {
   try {
@@ -27,9 +28,9 @@ export const getRoutines = async (req: AuthRequest, res: Response) => {
       workouts: undefined // remove the workouts array from response to keep it clean
     }));
 
-    res.json(mappedRoutines);
+    sendSuccess(res, mappedRoutines, 'Routines fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch routines' });
+    sendError(res, 'Failed to fetch routines', 500);
   }
 };
 
@@ -38,7 +39,7 @@ export const createRoutine = async (req: AuthRequest, res: Response) => {
     const { name, notes, automaticRestTimer, exercises } = req.body;
 
     if (!name) {
-      return res.status(400).json({ error: 'Routine name is required.' });
+      return sendError(res, 'Routine name is required.', 400);
     }
 
     const routine = await prisma.routine.create({
@@ -59,9 +60,9 @@ export const createRoutine = async (req: AuthRequest, res: Response) => {
       },
       include: { exercises: true }
     });
-    res.status(201).json(routine);
+    sendSuccess(res, routine, 'Routine created successfully', 201);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create routine' });
+    sendError(res, 'Failed to create routine', 500);
   }
 };
 
@@ -75,7 +76,7 @@ export const updateRoutine = async (req: AuthRequest, res: Response) => {
     });
 
     if (!existingRoutine) {
-      return res.status(404).json({ error: 'Routine not found.' });
+      return sendError(res, 'Routine not found.', 404);
     }
 
     // Delete existing exercises first
@@ -102,9 +103,9 @@ export const updateRoutine = async (req: AuthRequest, res: Response) => {
       include: { exercises: true }
     });
 
-    res.json(updatedRoutine);
+    sendSuccess(res, updatedRoutine, 'Routine updated successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update routine' });
+    sendError(res, 'Failed to update routine', 500);
   }
 };
 
@@ -120,10 +121,10 @@ export const getRoutineById = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    if (!routine) return res.status(404).json({ error: 'Routine not found.' });
-    res.json(routine);
+    if (!routine) return sendError(res, 'Routine not found.', 404);
+    sendSuccess(res, routine, 'Routine fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch routine' });
+    sendError(res, 'Failed to fetch routine', 500);
   }
 };
 
@@ -134,7 +135,7 @@ export const deleteRoutine = async (req: AuthRequest, res: Response) => {
     });
 
     if (!existingRoutine) {
-      return res.status(404).json({ error: 'Routine not found.' });
+      return sendError(res, 'Routine not found.', 404);
     }
 
     await prisma.routineExercise.deleteMany({
@@ -145,8 +146,8 @@ export const deleteRoutine = async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id }
     });
 
-    res.json({ message: 'Routine deleted successfully' });
+    sendSuccess(res, null, 'Routine deleted successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete routine' });
+    sendError(res, 'Failed to delete routine', 500);
   }
 };

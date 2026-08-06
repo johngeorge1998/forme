@@ -30,20 +30,21 @@ app.use('/api/v1/routines', routineRoutes);
 app.use('/api/v1/workouts', workoutRoutes);
 app.use('/api/v1/progress', progressRoutes);
 
+import { sendSuccess, sendError } from './utils/response';
+
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  sendSuccess(res, { timestamp: new Date().toISOString() }, 'ok', 200);
 });
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    },
-  });
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+  const data = process.env.NODE_ENV === 'development' ? { stack: err.stack } : null;
+  
+  sendError(res, message, status, data);
 });
 
 const PORT = process.env.PORT || 3000;

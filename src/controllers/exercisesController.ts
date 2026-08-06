@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../db';
+import { sendSuccess, sendError } from '../utils/response';
 
 const formatMediaPaths = (mediaObj: any, type: 'videos' | 'thumbnails', userGender?: string) => {
   if (!mediaObj || typeof mediaObj !== 'object') return [];
@@ -41,6 +42,7 @@ export const getExercises = async (req: AuthRequest, res: Response) => {
       where.bodyPart = { equals: String(muscleGroup), mode: 'insensitive' };
     }
 
+    const total = await prisma.exercise.count({ where });
     const exercises = await prisma.exercise.findMany({
       where,
       take: Number(limit),
@@ -55,9 +57,16 @@ export const getExercises = async (req: AuthRequest, res: Response) => {
       thumbnails: formatMediaPaths(ex.thumbnails, 'thumbnails', userGender)
     }));
 
-    res.json(formattedExercises);
+    const hasNext = (Number(offset) + formattedExercises.length) < total;
+
+    sendSuccess(res, formattedExercises, 'Exercises fetched successfully', 200, {
+      total,
+      limit: Number(limit),
+      offset: Number(offset),
+      hasNext
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch exercises' });
+    sendError(res, 'Failed to fetch exercises', 500);
   }
 };
 
@@ -67,7 +76,7 @@ export const getExerciseById = async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id }
     });
 
-    if (!exercise) return res.status(404).json({ error: 'Exercise not found' });
+    if (!exercise) return sendError(res, 'Exercise not found', 404);
     
     const userGender = req.user?.gender;
 
@@ -77,8 +86,8 @@ export const getExerciseById = async (req: AuthRequest, res: Response) => {
       thumbnails: formatMediaPaths(exercise.thumbnails, 'thumbnails', userGender)
     };
 
-    res.json(formattedExercise);
+    sendSuccess(res, formattedExercise, 'Exercise fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch exercise' });
+    sendError(res, 'Failed to fetch exercise', 500);
   }
 };
