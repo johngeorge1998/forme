@@ -51,7 +51,7 @@ export const getWorkoutById = async (req: AuthRequest, res: Response) => {
 
 export const startWorkout = async (req: AuthRequest, res: Response) => {
   try {
-    const { routineId, notes, exercises } = req.body;
+    const { routineId, notes, exercises, startTime } = req.body;
 
     let exercisesToCreate = exercises || [];
 
@@ -83,6 +83,7 @@ export const startWorkout = async (req: AuthRequest, res: Response) => {
         userId: req.user!.id,
         routineId,
         notes,
+        ...(startTime && { startTime: new Date(startTime) }),
         exercises: {
           create: exercisesToCreate.map((ex: any, idx: number) => ({
             exerciseId: ex.exerciseId,
@@ -263,7 +264,7 @@ export const saveExerciseNotes = async (req: AuthRequest, res: Response) => {
 
 export const finishWorkout = async (req: AuthRequest, res: Response) => {
   try {
-    const { endTime } = req.body;
+    const { endTime, durationSec, notes } = req.body;
     
     const session = await prisma.workoutSession.findFirst({
       where: { id: req.params.id, userId: req.user!.id },
@@ -274,7 +275,7 @@ export const finishWorkout = async (req: AuthRequest, res: Response) => {
     if (session.endTime) return sendError(res, 'Workout is already finished.', 400);
 
     const end = endTime ? new Date(endTime) : new Date();
-    const durationSec = Math.floor((end.getTime() - session.startTime.getTime()) / 1000);
+    const finalDurationSec = durationSec !== undefined ? durationSec : Math.floor((end.getTime() - session.startTime.getTime()) / 1000);
 
     let totalVolume = 0;
     session.exercises.forEach((ex: any) => {
@@ -289,8 +290,9 @@ export const finishWorkout = async (req: AuthRequest, res: Response) => {
       where: { id: session.id },
       data: {
         endTime: end,
-        durationSec,
-        volumeKg: totalVolume
+        durationSec: finalDurationSec,
+        volumeKg: totalVolume,
+        ...(notes !== undefined && { notes })
       }
     });
 

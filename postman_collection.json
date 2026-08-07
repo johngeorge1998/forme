@@ -432,7 +432,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"routineId\": \"routine-id-here\"\n}",
+              "raw": "{\n  \"routineId\": \"routine-id-here\",\n  \"startTime\": \"2024-05-14T10:00:00Z\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -640,7 +640,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"endTime\": \"2024-05-14T11:00:00Z\"\n}",
+              "raw": "{\n  \"endTime\": \"2024-05-14T11:00:00Z\",\n  \"durationSec\": 3600,\n  \"notes\": \"Felt great today\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
