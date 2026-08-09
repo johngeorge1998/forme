@@ -208,12 +208,14 @@ export const getExerciseStats = asyncHandler(async (req: AuthRequest, res: Respo
   let currentMaxKg = 0;
   let est1RMKg = 0;
   let totalReps = 0;
+  let maxTimeSeconds = 0;
+  let maxDistance = 0;
   let prDate: Date | null = null;
 
   sets.forEach((set) => {
     if (set.reps) totalReps += set.reps;
     
-    if (set.weightKg && set.reps) {
+    if (set.weightKg && set.weightKg > 0 && set.reps && set.reps > 0) {
       if (set.weightKg > currentMaxKg) {
         currentMaxKg = set.weightKg;
         prDate = set.workoutExercise.session.startTime;
@@ -223,12 +225,20 @@ export const getExerciseStats = asyncHandler(async (req: AuthRequest, res: Respo
       if (est1rm > est1RMKg) {
         est1RMKg = est1rm;
       }
+    } else if (set.timeSeconds && set.timeSeconds > maxTimeSeconds) {
+      maxTimeSeconds = set.timeSeconds;
+      if (!currentMaxKg && !maxDistance) prDate = set.workoutExercise.session.startTime;
+    } else if (set.distance && set.distance > maxDistance) {
+      maxDistance = set.distance;
+      if (!currentMaxKg && !maxTimeSeconds) prDate = set.workoutExercise.session.startTime;
     }
   });
 
   sendSuccess(res, {
     currentMax: convertWeight(currentMaxKg, unit),
     est1RM: round(convertWeight(est1RMKg, unit)!, 1),
+    maxTimeSeconds,
+    maxDistance,
     totalReps,
     prDate,
     weightUnit: unit,
@@ -243,7 +253,6 @@ export const getRecords = asyncHandler(async (req: AuthRequest, res: Response) =
     prisma.workoutSet.findMany({
       where: {
         isCompleted: true,
-        weightKg: { gt: 0 },
         workoutExercise: { session: { userId } }
       },
       include: {
@@ -263,24 +272,51 @@ export const getRecords = asyncHandler(async (req: AuthRequest, res: Response) =
     const exId = set.workoutExercise.exerciseId;
     const currentMax = maxRecordsMap.get(exId);
     
-    if (!currentMax || set.weightKg! > currentMax.weightKg) {
-      maxRecordsMap.set(exId, {
-        exerciseName: set.workoutExercise.exercise.name,
-        reps: set.reps,
-        weightKg: set.weightKg,
-        dateAchieved: set.workoutExercise.session.startTime
-      });
+    if (set.weightKg && set.weightKg > 0 && set.reps && set.reps > 0) {
+      if (!currentMax || !currentMax.weightKg || set.weightKg > currentMax.weightKg) {
+        maxRecordsMap.set(exId, {
+          type: 'weight',
+          exerciseName: set.workoutExercise.exercise.name,
+          reps: set.reps,
+          weightKg: set.weightKg,
+          dateAchieved: set.workoutExercise.session.startTime,
+          score: set.weightKg // for sorting
+        });
+      }
+    } else if (set.timeSeconds && set.timeSeconds > 0) {
+      if (!currentMax || !currentMax.timeSeconds || set.timeSeconds > currentMax.timeSeconds) {
+        maxRecordsMap.set(exId, {
+          type: 'time',
+          exerciseName: set.workoutExercise.exercise.name,
+          timeSeconds: set.timeSeconds,
+          dateAchieved: set.workoutExercise.session.startTime,
+          score: set.timeSeconds
+        });
+      }
+    } else if (set.distance && set.distance > 0) {
+      if (!currentMax || !currentMax.distance || set.distance > currentMax.distance) {
+        maxRecordsMap.set(exId, {
+          type: 'distance',
+          exerciseName: set.workoutExercise.exercise.name,
+          distance: set.distance,
+          dateAchieved: set.workoutExercise.session.startTime,
+          score: set.distance
+        });
+      }
     }
   });
 
   const records = Array.from(maxRecordsMap.values())
-    .sort((a, b) => b.weightKg - a.weightKg)
+    .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map((r) => ({
+      type: r.type,
       exerciseName: r.exerciseName,
       reps: r.reps,
-      weight: convertWeight(r.weightKg, unit),
-      weightUnit: unit,
+      weight: r.weightKg ? convertWeight(r.weightKg, unit) : undefined,
+      weightUnit: r.weightKg ? unit : undefined,
+      timeSeconds: r.timeSeconds,
+      distance: r.distance,
       dateAchieved: r.dateAchieved,
     }));
 

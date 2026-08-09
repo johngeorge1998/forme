@@ -41,32 +41,55 @@ const getExercisePRs = async (exerciseIds: string[], userId: string, unit: strin
   });
 
   const resultMap = new Map<string, {
-    pr: { weight: number | null; reps: number | null; date: Date };
+    pr: { weight: number | null; reps: number | null; timeSeconds: number | null; distance: number | null; date: Date };
     est1RM: number;
   }>();
 
   sets.forEach((set) => {
-    if (!set.weightKg || !set.reps) return;
-
+    // If it's a rep-based exercise with weight, compute est1RM and track PR by weight.
+    // If it's time-based or distance-based, est1RM remains 0, and PR is tracked by max time/distance.
     const exId = set.workoutExercise.exerciseId;
-    const est1RM = set.weightKg * (1 + set.reps / 30);
     const current = resultMap.get(exId);
+    
+    let isNewPR = false;
+    let newEst1RM = current ? current.est1RM : 0;
 
-    const newPR = !current || set.weightKg > (current.pr.weight ?? 0);
-    const newEst1RM = !current || round(convertWeight(est1RM, unit as any)!, 1) > current.est1RM;
+    if (set.weightKg && set.weightKg > 0 && set.reps && set.reps > 0) {
+      // Rep-based PR logic
+      const est1RM = set.weightKg * (1 + set.reps / 30);
+      const est1RMConverted = round(convertWeight(est1RM, unit as any)!, 1);
+      if (!current || est1RMConverted > current.est1RM) {
+        newEst1RM = est1RMConverted;
+      }
+      if (!current || !current.pr.weight || set.weightKg > current.pr.weight) {
+        isNewPR = true;
+      }
+    } else if (set.timeSeconds && set.timeSeconds > 0) {
+      // Time-based PR logic
+      if (!current || !current.pr.timeSeconds || set.timeSeconds > current.pr.timeSeconds) {
+        isNewPR = true;
+      }
+    } else if (set.distance && set.distance > 0) {
+      // Distance-based PR logic
+      if (!current || !current.pr.distance || set.distance > current.pr.distance) {
+        isNewPR = true;
+      }
+    }
 
-    resultMap.set(exId, {
-      pr: newPR
-        ? {
-            weight: convertWeight(set.weightKg, unit as any),
-            reps: set.reps,
-            date: set.workoutExercise.session.startTime,
-          }
-        : current!.pr,
-      est1RM: newEst1RM
-        ? round(convertWeight(est1RM, unit as any)!, 1)
-        : current!.est1RM,
-    });
+    if (!current || isNewPR || newEst1RM > current.est1RM) {
+      resultMap.set(exId, {
+        pr: isNewPR
+          ? {
+              weight: convertWeight(set.weightKg, unit as any),
+              reps: set.reps,
+              timeSeconds: set.timeSeconds,
+              distance: set.distance,
+              date: set.workoutExercise.session.startTime,
+            }
+          : current!.pr,
+        est1RM: newEst1RM,
+      });
+    }
   });
 
   return resultMap;
@@ -140,6 +163,8 @@ export const createRoutine = asyncHandler(async (req: AuthRequest, res: Response
           order: ex.order ?? idx,
           targetSets: ex.targetSets || 1,
           targetReps: ex.targetReps,
+          targetTimeSeconds: ex.targetTimeSeconds,
+          targetDistance: ex.targetDistance,
           restSeconds: ex.restSeconds
         })) || []
       }
@@ -181,6 +206,8 @@ export const updateRoutine = asyncHandler(async (req: AuthRequest, res: Response
             order: ex.order ?? idx,
             targetSets: ex.targetSets || 1,
             targetReps: ex.targetReps,
+            targetTimeSeconds: ex.targetTimeSeconds,
+            targetDistance: ex.targetDistance,
             restSeconds: ex.restSeconds
           })) || []
         }

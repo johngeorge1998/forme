@@ -138,6 +138,8 @@ export const startWorkout = asyncHandler(async (req: AuthRequest, res: Response)
               setNumber: set.setNumber || sIdx + 1,
               weightKg: set.weightKg || null,
               reps: set.reps || null,
+              timeSeconds: set.timeSeconds || ex.targetTimeSeconds || null,
+              distance: set.distance || ex.targetDistance || null,
               isCompleted: set.isCompleted || false
             })) || []
           }
@@ -151,10 +153,12 @@ export const startWorkout = asyncHandler(async (req: AuthRequest, res: Response)
 });
 
 export const updateSet = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { weightKg, reps, isCompleted } = req.body;
+  const { weightKg, reps, timeSeconds, distance, isCompleted } = req.body;
   
-  if (weightKg !== undefined && weightKg < 0) return sendError(res, 'Weight must be positive.', 400);
-  if (reps !== undefined && reps < 0) return sendError(res, 'Reps must be positive.', 400);
+  if (weightKg !== undefined && weightKg !== null && weightKg < 0) return sendError(res, 'Weight must be positive.', 400);
+  if (reps !== undefined && reps !== null && reps < 0) return sendError(res, 'Reps must be positive.', 400);
+  if (timeSeconds !== undefined && timeSeconds !== null && timeSeconds < 0) return sendError(res, 'Time must be positive.', 400);
+  if (distance !== undefined && distance !== null && distance < 0) return sendError(res, 'Distance must be positive.', 400);
 
   const session = await prisma.workoutSession.findFirst({
     where: { id: req.params.id, userId: req.user!.id }
@@ -163,7 +167,7 @@ export const updateSet = asyncHandler(async (req: AuthRequest, res: Response) =>
 
   const updatedSet = await prisma.workoutSet.update({
     where: { id: req.params.setId },
-    data: { weightKg, reps, isCompleted }
+    data: { weightKg, reps, timeSeconds, distance, isCompleted }
   });
 
   sendSuccess(res, updatedSet, 'Set updated successfully');

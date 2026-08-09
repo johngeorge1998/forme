@@ -322,7 +322,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Upper Body\",\n  \"automaticRestTimer\": true,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetSets\": 3, \"targetReps\": \"8-10\" }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Core Work\",\n  \"automaticRestTimer\": true,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 60 }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -338,7 +338,7 @@
                 "routines"
               ]
             },
-            "description": "Create a new routine.\n\n**Body fields:**\n- **name** (required): Routine name.\n- **notes** (optional): Free-text notes.\n- **automaticRestTimer** (optional, default: true): If true, the app auto-starts a rest timer between sets.\n- **exercises** (optional): Array of `{ exerciseId, targetSets, targetReps, restSeconds, order }`."
+            "description": "Create a new routine.\n\n**Body fields:**\n- **name** (required): Routine name.\n- **notes** (optional): Free-text notes.\n- **automaticRestTimer** (optional, default: true): If true, the app auto-starts a rest timer between sets.\n- **exercises** (optional): Array of `{ exerciseId, targetSets, targetReps, targetTimeSeconds, targetDistance, restSeconds, order }`."
           }
         },
         {
@@ -354,7 +354,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Upper Body V2\",\n  \"automaticRestTimer\": false,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetSets\": 4, \"targetReps\": \"10-12\" }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Core Work V2\",\n  \"automaticRestTimer\": false,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 90 }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -502,7 +502,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"weightKg\": 65,\n  \"reps\": 8,\n  \"isCompleted\": true\n}",
+              "raw": "{\n  \"weightKg\": 65,\n  \"reps\": 8,\n  \"timeSeconds\": null,\n  \"distance\": null,\n  \"isCompleted\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"

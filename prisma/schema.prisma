@@ -83,9 +83,11 @@ model RoutineExercise {
   exerciseId  String
   exercise    Exercise @relation(fields: [exerciseId], references: [id])
   order       Int
-  targetSets  Int      @default(1)
-  targetReps  String?
-  restSeconds Int?
+  targetSets        Int      @default(1)
+  targetReps        String?
+  targetTimeSeconds Int?
+  targetDistance    Float?
+  restSeconds       Int?
 }
 
 // --- WORKOUT SESSIONS & LIVE TRACKING ---
@@ -122,5 +124,7 @@ model WorkoutSet {
   setNumber         Int
   weightKg          Float?
   reps              Int?
+  timeSeconds       Int?
+  distance          Float?
   isCompleted       Boolean         @default(false)
 }
