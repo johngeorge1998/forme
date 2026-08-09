@@ -3,11 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import { sendSuccess, sendError } from './utils/response';
 import authRoutes from './routes/auth';
 import exerciseRoutes from './routes/exercises';
 import routineRoutes from './routes/routines';
 import workoutRoutes from './routes/workouts';
 import progressRoutes from './routes/progress';
+import profileRoutes from './routes/profile';
 
 const app = express();
 
@@ -29,17 +31,21 @@ app.use('/api/v1/exercises', exerciseRoutes);
 app.use('/api/v1/routines', routineRoutes);
 app.use('/api/v1/workouts', workoutRoutes);
 app.use('/api/v1/progress', progressRoutes);
-
-import { sendSuccess, sendError } from './utils/response';
+app.use('/api/v1/profile', profileRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
   sendSuccess(res, { timestamp: new Date().toISOString() }, 'ok', 200);
 });
 
-// Error handling middleware
+// Centralized error handling middleware
+// All asyncHandler errors and unhandled exceptions flow here.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err.message || err);
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
+
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
   const data = process.env.NODE_ENV === 'development' ? { stack: err.stack } : null;

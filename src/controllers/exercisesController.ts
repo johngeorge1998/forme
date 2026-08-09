@@ -1,7 +1,8 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../types';
 import prisma from '../db';
 import { sendSuccess, sendError } from '../utils/response';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const formatMediaPaths = (mediaObj: any, type: 'videos' | 'thumbnails', userGender?: string) => {
   if (!mediaObj || typeof mediaObj !== 'object') return [];
@@ -30,64 +31,58 @@ const formatMediaPaths = (mediaObj: any, type: 'videos' | 'thumbnails', userGend
   return [];
 };
 
-export const getExercises = async (req: AuthRequest, res: Response) => {
-  try {
-    const { search, muscleGroup, equipment, limit = 50, offset = 0 } = req.query;
+export const getExercises = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { search, muscleGroup, equipment, limit = 50, offset = 0 } = req.query;
 
-    const where: any = {};
-    if (search) {
-      where.name = { contains: String(search), mode: 'insensitive' };
-    }
-    if (muscleGroup) {
-      where.bodyPart = { equals: String(muscleGroup), mode: 'insensitive' };
-    }
+  const where: any = {};
+  if (search) {
+    where.name = { contains: String(search), mode: 'insensitive' };
+  }
+  if (muscleGroup) {
+    where.bodyPart = { equals: String(muscleGroup), mode: 'insensitive' };
+  }
 
-    const total = await prisma.exercise.count({ where });
-    const exercises = await prisma.exercise.findMany({
+  const [total, exercises] = await Promise.all([
+    prisma.exercise.count({ where }),
+    prisma.exercise.findMany({
       where,
       take: Number(limit),
       skip: Number(offset),
-    });
+    }),
+  ]);
 
-    const userGender = req.user?.gender;
+  const userGender = req.user?.gender;
 
-    const formattedExercises = exercises.map(ex => ({
-      ...ex,
-      videos: formatMediaPaths(ex.videos, 'videos', userGender),
-      thumbnails: formatMediaPaths(ex.thumbnails, 'thumbnails', userGender)
-    }));
+  const formattedExercises = exercises.map(ex => ({
+    ...ex,
+    videos: formatMediaPaths(ex.videos, 'videos', userGender),
+    thumbnails: formatMediaPaths(ex.thumbnails, 'thumbnails', userGender)
+  }));
 
-    const hasNext = (Number(offset) + formattedExercises.length) < total;
+  const hasNext = (Number(offset) + formattedExercises.length) < total;
 
-    sendSuccess(res, formattedExercises, 'Exercises fetched successfully', 200, {
-      total,
-      limit: Number(limit),
-      offset: Number(offset),
-      hasNext
-    });
-  } catch (error) {
-    sendError(res, 'Failed to fetch exercises', 500);
-  }
-};
+  sendSuccess(res, formattedExercises, 'Exercises fetched successfully', 200, {
+    total,
+    limit: Number(limit),
+    offset: Number(offset),
+    hasNext
+  });
+});
 
-export const getExerciseById = async (req: AuthRequest, res: Response) => {
-  try {
-    const exercise = await prisma.exercise.findUnique({
-      where: { id: req.params.id }
-    });
+export const getExerciseById = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const exercise = await prisma.exercise.findUnique({
+    where: { id: req.params.id }
+  });
 
-    if (!exercise) return sendError(res, 'Exercise not found', 404);
-    
-    const userGender = req.user?.gender;
+  if (!exercise) return sendError(res, 'Exercise not found', 404);
+  
+  const userGender = req.user?.gender;
 
-    const formattedExercise = {
-      ...exercise,
-      videos: formatMediaPaths(exercise.videos, 'videos', userGender),
-      thumbnails: formatMediaPaths(exercise.thumbnails, 'thumbnails', userGender)
-    };
+  const formattedExercise = {
+    ...exercise,
+    videos: formatMediaPaths(exercise.videos, 'videos', userGender),
+    thumbnails: formatMediaPaths(exercise.thumbnails, 'thumbnails', userGender)
+  };
 
-    sendSuccess(res, formattedExercise, 'Exercise fetched successfully');
-  } catch (error) {
-    sendError(res, 'Failed to fetch exercise', 500);
-  }
-};
+  sendSuccess(res, formattedExercise, 'Exercise fetched successfully');
+});

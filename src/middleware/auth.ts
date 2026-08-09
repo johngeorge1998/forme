@@ -1,13 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
+import { config } from '../config';
+import { AuthRequest } from '../types';
 import { sendError } from '../utils/response';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-replace-me-in-production';
-
-export interface AuthRequest extends Request {
-  user?: { id: string; email: string; gender?: string };
-}
+export { AuthRequest };
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
@@ -17,11 +14,11 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return sendError(res, 'Access token missing', 401);
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return sendError(res, 'Invalid or expired token', 403);
-    }
-    req.user = user as any;
+  try {
+    const decoded = jwt.verify(token, config.jwt.secret) as { id: string; email: string; gender?: string };
+    req.user = decoded;
     next();
-  });
+  } catch {
+    return sendError(res, 'Invalid or expired token', 403);
+  }
 };

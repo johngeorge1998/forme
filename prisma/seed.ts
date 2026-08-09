@@ -14,21 +14,22 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
   console.log(`Loaded ${data.length} exercises from JSON`);
 
-  for (const item of data) {
-    await prisma.exercise.create({
-      data: {
-        id: item.id,
-        name: item.name,
-        bodyPart: item.bodyPart,
-        category: item.target || 'UNKNOWN',
-        videos: item.videos || {},
-        thumbnails: item.thumbnails || {},
-        instructions: item.instructions || [],
-      }
-    });
-  }
+  // Batch insert with skipDuplicates for idempotent re-runs.
+  // ~100x faster than individual creates for large datasets.
+  const result = await prisma.exercise.createMany({
+    data: data.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      bodyPart: item.bodyPart,
+      category: item.target || 'UNKNOWN',
+      videos: item.videos || {},
+      thumbnails: item.thumbnails || {},
+      instructions: item.instructions || [],
+    })),
+    skipDuplicates: true,
+  });
 
-  console.log('Database seeded successfully!');
+  console.log(`Database seeded successfully! ${result.count} exercises inserted.`);
 }
 
 main()
