@@ -386,12 +386,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/workouts",
+              "raw": "{{baseUrl}}/workouts?limit=20&offset=0",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "workouts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -757,6 +767,67 @@
                 "records"
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Get user profile with aggregated stats: fullName, email, weightUnit, totalWorkouts, streakDays, totalVolume."
+          }
+        },
+        {
+          "name": "Update Weight Unit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weightUnit\": \"LBS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/profile/weight-unit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile",
+                "weight-unit"
+              ]
+            },
+            "description": "Update the user's preferred weight unit. Accepts \"KG\" or \"LBS\". This preference affects all weight/volume values returned by workouts, progress, and records APIs."
           }
         }
       ]
