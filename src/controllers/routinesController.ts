@@ -2,30 +2,120 @@ import { Response } from 'express';
 import { AuthRequest } from '../types';
 import prisma from '../db';
 import { sendSuccess, sendError } from '../utils/response';
+import { convertWeight, round } from '../utils/weight';
 import { asyncHandler } from '../utils/asyncHandler';
 
-export const getRoutines = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const routines = await prisma.routine.findMany({
-    where: { userId: req.user!.id },
-    include: {
-      exercises: {
-        include: { exercise: true },
-        orderBy: { order: 'asc' }
-      },
-      workouts: {
-        orderBy: { startTime: 'desc' },
-        take: 1, // Only need the most recent workout to determine lastPerformedAt
-        select: { startTime: true }
+/**
+ * Helper: fetch the user's weight unit preference.
+ * Returns 'KG' if user not found (safe default).
+ */
+const getUserWeightUnit = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { weightUnit: true },
+  });
+  return user?.weightUnit ?? 'KG';
+};
+
+/**
+ * Fetch the best PR (estimated 1RM via Epley formula) for each exercise ID
+ * belonging to the given user. Returns a Map<exerciseId, PR>.
+ */
+const getExercisePRs = async (exerciseIds: string[], userId: string, unit: string) => {
+  if (exerciseIds.length === 0) return new Map();
+
+  const sets = await prisma.workoutSet.findMany({
+    where: {
+      isCompleted: true,
+      weightKg: { gt: 0 },
+      workoutExercise: {
+        exerciseId: { in: exerciseIds },
+        session: { userId }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    include: {
+      workoutExercise: {
+        include: { session: { select: { startTime: true } } }
+      }
+    }
   });
-  
-  // Map to include lastPerformedAt cleanly for frontend
+
+  const resultMap = new Map<string, {
+    pr: { weight: number | null; reps: number | null; date: Date };
+    est1RM: number;
+  }>();
+
+  sets.forEach((set) => {
+    if (!set.weightKg || !set.reps) return;
+
+    const exId = set.workoutExercise.exerciseId;
+    const est1RM = set.weightKg * (1 + set.reps / 30);
+    const current = resultMap.get(exId);
+
+    const newPR = !current || set.weightKg > (current.pr.weight ?? 0);
+    const newEst1RM = !current || round(convertWeight(est1RM, unit as any)!, 1) > current.est1RM;
+
+    resultMap.set(exId, {
+      pr: newPR
+        ? {
+            weight: convertWeight(set.weightKg, unit as any),
+            reps: set.reps,
+            date: set.workoutExercise.session.startTime,
+          }
+        : current!.pr,
+      est1RM: newEst1RM
+        ? round(convertWeight(est1RM, unit as any)!, 1)
+        : current!.est1RM,
+    });
+  });
+
+  return resultMap;
+};
+
+export const getRoutines = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+
+  const [unit, routines] = await Promise.all([
+    getUserWeightUnit(userId),
+    prisma.routine.findMany({
+      where: { userId },
+      include: {
+        exercises: {
+          include: { exercise: true },
+          orderBy: { order: 'asc' }
+        },
+        workouts: {
+          orderBy: { startTime: 'desc' },
+          take: 1, // Only need the most recent workout to determine lastPerformedAt
+          select: { startTime: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    }),
+  ]);
+
+  // Collect all unique exercise IDs across all routines
+  const allExerciseIds = [...new Set(
+    routines.flatMap(r => r.exercises.map(ex => ex.exerciseId))
+  )];
+
+  // Single batch query for all PRs and est1RMs
+  const recordsMap = await getExercisePRs(allExerciseIds, userId, unit);
+
+  // Map to include lastPerformedAt, PR, and est1RM data cleanly for frontend
   const mappedRoutines = routines.map(routine => ({
     ...routine,
     lastPerformedAt: routine.workouts.length > 0 ? routine.workouts[0].startTime : null,
-    workouts: undefined // remove the workouts array from response to keep it clean
+    workouts: undefined, // remove the workouts array from response to keep it clean
+    exercises: routine.exercises.map(ex => {
+      const records = recordsMap.get(ex.exerciseId);
+      return {
+        ...ex,
+        pr: records?.pr || null,
+        est1RM: records?.est1RM || null,
+        weightUnit: unit,
+      };
+    }),
   }));
 
   sendSuccess(res, mappedRoutines, 'Routines fetched successfully');
@@ -103,18 +193,40 @@ export const updateRoutine = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 export const getRoutineById = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const routine = await prisma.routine.findFirst({
-    where: { id: req.params.id, userId: req.user!.id },
-    include: {
-      exercises: {
-        include: { exercise: true },
-        orderBy: { order: 'asc' }
+  const userId = req.user!.id;
+
+  const [unit, routine] = await Promise.all([
+    getUserWeightUnit(userId),
+    prisma.routine.findFirst({
+      where: { id: req.params.id, userId },
+      include: {
+        exercises: {
+          include: { exercise: true },
+          orderBy: { order: 'asc' }
+        }
       }
-    }
-  });
+    }),
+  ]);
 
   if (!routine) return sendError(res, 'Routine not found.', 404);
-  sendSuccess(res, routine, 'Routine fetched successfully');
+
+  const exerciseIds = routine.exercises.map(ex => ex.exerciseId);
+  const recordsMap = await getExercisePRs(exerciseIds, userId, unit);
+
+  const mappedRoutine = {
+    ...routine,
+    exercises: routine.exercises.map(ex => {
+      const records = recordsMap.get(ex.exerciseId);
+      return {
+        ...ex,
+        pr: records?.pr || null,
+        est1RM: records?.est1RM || null,
+        weightUnit: unit,
+      };
+    }),
+  };
+
+  sendSuccess(res, mappedRoutine, 'Routine fetched successfully');
 });
 
 export const deleteRoutine = asyncHandler(async (req: AuthRequest, res: Response) => {
