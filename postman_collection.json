@@ -322,7 +322,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Core Work\",\n  \"automaticRestTimer\": true,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 60 }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Core Work\",\n  \"notes\": \"Focus on breathing and form.\",\n  \"automaticRestTimer\": true,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 60 }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -354,7 +354,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Core Work V2\",\n  \"automaticRestTimer\": false,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 90 }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Core Work V2\",\n  \"notes\": \"Increased time for planks.\",\n  \"automaticRestTimer\": false,\n  \"exercises\": [\n    { \"exerciseId\": \"0489\", \"targetTimeSeconds\": 90 }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
