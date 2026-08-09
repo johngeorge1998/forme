@@ -260,6 +260,7 @@
     },
     {
       "name": "3. Routines",
+      "description": "Manage workout routine templates. GET endpoints now include PR (personal record) and estimated 1RM for each exercise based on the user's workout history.",
       "item": [
         {
           "name": "Get All Routines",
@@ -280,7 +281,32 @@
               "path": [
                 "routines"
               ]
-            }
+            },
+            "description": "Fetch all routines for the authenticated user.\n\nEach exercise in the response includes:\n- **pr** (Personal Record): The actual heaviest weight lifted — `{ weight, reps, date }`. `null` if never performed.\n- **est1RM** (Estimated One Rep Max): Theoretical max for a single rep via Epley formula. `null` if never performed.\n- **weightUnit**: The user's preferred unit (KG or LBS).\n- **lastPerformedAt**: Timestamp of the most recent workout using this routine."
+          }
+        },
+        {
+          "name": "Get Routine By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/routines/routine-id-here",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "routines",
+                "routine-id-here"
+              ]
+            },
+            "description": "Fetch a single routine by ID.\n\nEach exercise in the response includes:\n- **pr** (Personal Record): The actual heaviest weight lifted — `{ weight, reps, date }`. `null` if never performed.\n- **est1RM** (Estimated One Rep Max): Theoretical max for a single rep via Epley formula. `null` if never performed.\n- **weightUnit**: The user's preferred unit (KG or LBS)."
           }
         },
         {
@@ -311,7 +337,8 @@
               "path": [
                 "routines"
               ]
-            }
+            },
+            "description": "Create a new routine.\n\n**Body fields:**\n- **name** (required): Routine name.\n- **notes** (optional): Free-text notes.\n- **automaticRestTimer** (optional, default: true): If true, the app auto-starts a rest timer between sets.\n- **exercises** (optional): Array of `{ exerciseId, targetSets, targetReps, restSeconds, order }`."
           }
         },
         {
@@ -343,7 +370,8 @@
                 "routines",
                 "routine-id-here"
               ]
-            }
+            },
+            "description": "Update an existing routine. Replaces all exercises atomically (delete + recreate in a transaction)."
           }
         },
         {
@@ -366,7 +394,8 @@
                 "routines",
                 "routine-id-here"
               ]
-            }
+            },
+            "description": "Delete a routine and all its exercises (cascade)."
           }
         }
       ]
