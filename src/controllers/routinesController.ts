@@ -104,7 +104,18 @@ export const getRoutines = asyncHandler(async (req: AuthRequest, res: Response) 
       where: { userId },
       include: {
         exercises: {
-          include: { exercise: true },
+          include: { 
+            exercise: {
+              select: {
+                id: true,
+                name: true,
+                bodyPart: true,
+                category: true,
+                instructions: true,
+                userId: true
+              }
+            } 
+          },
           orderBy: { order: 'asc' }
         },
         workouts: {
@@ -149,6 +160,14 @@ export const createRoutine = asyncHandler(async (req: AuthRequest, res: Response
 
   if (!name) {
     return sendError(res, 'Routine name is required.', 400);
+  }
+
+  const routineCount = await prisma.routine.count({
+    where: { userId: req.user!.id }
+  });
+
+  if (routineCount >= 6) {
+    return sendError(res, 'You can only create up to 6 routines.', 400);
   }
 
   const routine = await prisma.routine.create({
@@ -228,7 +247,18 @@ export const getRoutineById = asyncHandler(async (req: AuthRequest, res: Respons
       where: { id: req.params.id, userId },
       include: {
         exercises: {
-          include: { exercise: true },
+          include: { 
+            exercise: {
+              select: {
+                id: true,
+                name: true,
+                bodyPart: true,
+                category: true,
+                instructions: true,
+                userId: true
+              }
+            } 
+          },
           orderBy: { order: 'asc' }
         }
       }

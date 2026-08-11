@@ -255,6 +255,92 @@
               ]
             }
           }
+        },
+        {
+          "name": "Create Custom Exercise",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Custom Squat\",\n  \"bodyPart\": \"legs\",\n  \"category\": \"strength\",\n  \"instructions\": [\"Keep back straight\", \"Go below parallel\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/exercises",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exercises"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Custom Exercise",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Custom Squat V2\",\n  \"instructions\": [\"Keep back straight\", \"Go below parallel\", \"Breathe correctly\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/exercises/exercise-id-here",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exercises",
+                "exercise-id-here"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Custom Exercise",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exercises/exercise-id-here",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exercises",
+                "exercise-id-here"
+              ]
+            }
+          }
         }
       ]
     },

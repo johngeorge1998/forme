@@ -34,7 +34,13 @@ const formatMediaPaths = (mediaObj: any, type: 'videos' | 'thumbnails', userGend
 export const getExercises = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { search, muscleGroup, equipment, limit = 50, offset = 0 } = req.query;
 
-  const where: any = {};
+  const where: any = {
+    OR: [
+      { userId: null },
+      { userId: req.user!.id }
+    ]
+  };
+
   if (search) {
     where.name = { contains: String(search), mode: 'insensitive' };
   }
@@ -70,8 +76,14 @@ export const getExercises = asyncHandler(async (req: AuthRequest, res: Response)
 });
 
 export const getExerciseById = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const exercise = await prisma.exercise.findUnique({
-    where: { id: req.params.id }
+  const exercise = await prisma.exercise.findFirst({
+    where: { 
+      id: req.params.id,
+      OR: [
+        { userId: null },
+        { userId: req.user!.id }
+      ]
+    }
   });
 
   if (!exercise) return sendError(res, 'Exercise not found', 404);
@@ -85,4 +97,70 @@ export const getExerciseById = asyncHandler(async (req: AuthRequest, res: Respon
   };
 
   sendSuccess(res, formattedExercise, 'Exercise fetched successfully');
+});
+
+export const createExercise = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { name, bodyPart, category, instructions } = req.body;
+
+  if (!name) {
+    return sendError(res, 'Exercise name is required.', 400);
+  }
+  if (!bodyPart) {
+    return sendError(res, 'Body part is required.', 400);
+  }
+
+  const exercise = await prisma.exercise.create({
+    data: {
+      name: String(name),
+      bodyPart: String(bodyPart),
+      category: category ? String(category) : 'Custom',
+      instructions: instructions || null,
+      userId: req.user!.id
+    }
+  });
+
+  sendSuccess(res, exercise, 'Exercise created successfully', 201);
+});
+
+export const updateExercise = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const { name, bodyPart, category, instructions } = req.body;
+
+  const existingExercise = await prisma.exercise.findFirst({
+    where: { id, userId: req.user!.id }
+  });
+
+  if (!existingExercise) {
+    return sendError(res, 'Custom exercise not found or unauthorized.', 404);
+  }
+
+  const updatedExercise = await prisma.exercise.update({
+    where: { id },
+    data: {
+      name: name !== undefined ? String(name) : existingExercise.name,
+      bodyPart: bodyPart !== undefined ? String(bodyPart) : existingExercise.bodyPart,
+      category: category !== undefined ? String(category) : existingExercise.category,
+      instructions: instructions !== undefined ? instructions : existingExercise.instructions
+    }
+  });
+
+  sendSuccess(res, updatedExercise, 'Exercise updated successfully');
+});
+
+export const deleteExercise = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const existingExercise = await prisma.exercise.findFirst({
+    where: { id, userId: req.user!.id }
+  });
+
+  if (!existingExercise) {
+    return sendError(res, 'Custom exercise not found or unauthorized.', 404);
+  }
+
+  await prisma.exercise.delete({
+    where: { id }
+  });
+
+  sendSuccess(res, null, 'Exercise deleted successfully');
 });
