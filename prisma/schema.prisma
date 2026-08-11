@@ -54,7 +54,8 @@ enum Provider {
 model Exercise {
   id               String    @id @default(uuid())
   name             String
-  bodyPart         String
+  primaryMuscle    String
+  secondaryMuscles String[]
   category         String
   videos           Json?
   thumbnails       Json?

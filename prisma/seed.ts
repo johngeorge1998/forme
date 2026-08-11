@@ -20,7 +20,8 @@ async function main() {
     data: data.map((item: any) => ({
       id: item.id,
       name: item.name,
-      bodyPart: item.bodyPart,
+      primaryMuscle: item.bodyPart || 'UNKNOWN',
+      secondaryMuscles: [],
       category: item.target || 'UNKNOWN',
       videos: item.videos || {},
       thumbnails: item.thumbnails || {},

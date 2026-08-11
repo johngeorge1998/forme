@@ -45,7 +45,7 @@ export const getExercises = asyncHandler(async (req: AuthRequest, res: Response)
     where.name = { contains: String(search), mode: 'insensitive' };
   }
   if (muscleGroup) {
-    where.bodyPart = { equals: String(muscleGroup), mode: 'insensitive' };
+    where.primaryMuscle = { equals: String(muscleGroup), mode: 'insensitive' };
   }
 
   const [total, exercises] = await Promise.all([
@@ -100,19 +100,20 @@ export const getExerciseById = asyncHandler(async (req: AuthRequest, res: Respon
 });
 
 export const createExercise = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { name, bodyPart, category, instructions } = req.body;
+  const { name, primaryMuscle, secondaryMuscles, category, instructions } = req.body;
 
   if (!name) {
     return sendError(res, 'Exercise name is required.', 400);
   }
-  if (!bodyPart) {
-    return sendError(res, 'Body part is required.', 400);
+  if (!primaryMuscle) {
+    return sendError(res, 'Primary muscle is required.', 400);
   }
 
   const exercise = await prisma.exercise.create({
     data: {
       name: String(name),
-      bodyPart: String(bodyPart),
+      primaryMuscle: String(primaryMuscle),
+      secondaryMuscles: Array.isArray(secondaryMuscles) ? secondaryMuscles : [],
       category: category ? String(category) : 'Custom',
       instructions: instructions || null,
       userId: req.user!.id
@@ -124,7 +125,7 @@ export const createExercise = asyncHandler(async (req: AuthRequest, res: Respons
 
 export const updateExercise = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { name, bodyPart, category, instructions } = req.body;
+  const { name, primaryMuscle, secondaryMuscles, category, instructions } = req.body;
 
   const existingExercise = await prisma.exercise.findFirst({
     where: { id, userId: req.user!.id }
@@ -138,7 +139,8 @@ export const updateExercise = asyncHandler(async (req: AuthRequest, res: Respons
     where: { id },
     data: {
       name: name !== undefined ? String(name) : existingExercise.name,
-      bodyPart: bodyPart !== undefined ? String(bodyPart) : existingExercise.bodyPart,
+      primaryMuscle: primaryMuscle !== undefined ? String(primaryMuscle) : existingExercise.primaryMuscle,
+      secondaryMuscles: secondaryMuscles !== undefined ? secondaryMuscles : existingExercise.secondaryMuscles,
       category: category !== undefined ? String(category) : existingExercise.category,
       instructions: instructions !== undefined ? instructions : existingExercise.instructions
     }

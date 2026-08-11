@@ -109,7 +109,8 @@ export const getRoutines = asyncHandler(async (req: AuthRequest, res: Response) 
               select: {
                 id: true,
                 name: true,
-                bodyPart: true,
+                primaryMuscle: true,
+                secondaryMuscles: true,
                 category: true,
                 instructions: true,
                 userId: true
@@ -252,7 +253,8 @@ export const getRoutineById = asyncHandler(async (req: AuthRequest, res: Respons
               select: {
                 id: true,
                 name: true,
-                bodyPart: true,
+                primaryMuscle: true,
+                secondaryMuscles: true,
                 category: true,
                 instructions: true,
                 userId: true

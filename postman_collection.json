@@ -269,7 +269,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"My Custom Squat\",\n  \"bodyPart\": \"legs\",\n  \"category\": \"strength\",\n  \"instructions\": [\"Keep back straight\", \"Go below parallel\"]\n}",
+              "raw": "{\n  \"name\": \"My Custom Squat\",\n  \"primaryMuscle\": \"legs\",\n  \"secondaryMuscles\": [\"glutes\"],\n  \"category\": \"strength\",\n  \"instructions\": [\"Keep back straight\", \"Go below parallel\"]\n}",
               "options": {
                 "raw": {
                   "language": "json"
