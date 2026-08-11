@@ -54,6 +54,7 @@ export const getExercises = asyncHandler(async (req: AuthRequest, res: Response)
       where,
       take: Number(limit),
       skip: Number(offset),
+      orderBy: { name: 'asc' }
     }),
   ]);
 
