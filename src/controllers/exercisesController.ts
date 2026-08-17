@@ -33,13 +33,20 @@ const formatMediaPaths = (mediaObj: any, type: 'videos' | 'thumbnails', userGend
 
 export const getExercises = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { search, muscleGroup, equipment, limit = 50, offset = 0 } = req.query;
+  const type = req.query.type || req.body.type;
 
-  const where: any = {
-    OR: [
+  const where: any = {};
+
+  if (type === 'custom') {
+    where.userId = req.user!.id;
+  } else if (type === 'master') {
+    where.userId = null;
+  } else {
+    where.OR = [
       { userId: null },
       { userId: req.user!.id }
-    ]
-  };
+    ];
+  }
 
   if (search) {
     where.name = { contains: String(search), mode: 'insensitive' };
